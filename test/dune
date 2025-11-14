@@ -1,0 +1,69 @@
+(test
+ (name test_primitives)
+ (libraries avro-simple alcotest qcheck)
+ (modules test_primitives))
+
+(test
+ (name test_qcheck_properties)
+ (libraries avro-simple qcheck)
+ (modules test_qcheck_properties))
+
+(test
+ (name test_records)
+ (libraries avro-simple alcotest)
+ (modules test_records))
+
+(test
+ (name test_complex_types)
+ (libraries avro-simple alcotest qcheck)
+ (modules test_complex_types))
+
+(test
+ (name test_schema_validation)
+ (libraries avro-simple alcotest)
+ (modules test_schema_validation))
+
+(test
+ (name test_schema_evolution)
+ (libraries avro-simple alcotest)
+ (modules test_schema_evolution))
+
+(test
+ (name test_container)
+ (libraries avro-simple alcotest)
+ (modules test_container))
+
+(test
+ (name test_compression)
+ (libraries avro-simple alcotest)
+ (modules test_compression))
+
+(test
+ (name test_roundtrip)
+ (libraries avro-simple alcotest)
+ (modules test_roundtrip))
+
+(test
+ (name test_schema_json)
+ (libraries avro-simple alcotest)
+ (modules test_schema_json))
+
+(test
+ (name test_recursive)
+ (libraries avro-simple alcotest)
+ (modules test_recursive))
+
+(test
+ (name test_schema_aliases)
+ (libraries avro-simple alcotest)
+ (modules test_schema_aliases))
+
+(test
+ (name test_logical_types)
+ (libraries avro-simple alcotest)
+ (modules test_logical_types))
+
+(executable
+ (name debug_codecs)
+ (libraries avro-simple)
+ (modules debug_codecs))
