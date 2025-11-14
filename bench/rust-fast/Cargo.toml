@@ -1,0 +1,17 @@
+[package]
+name = "avro-rust-bench-fast"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "avro-rust-bench-fast"
+path = "src/main.rs"
+
+[dependencies]
+serde_avro_fast = "2.0"
+serde = { version = "1.0", features = ["derive"] }
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1

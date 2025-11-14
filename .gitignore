@@ -18,6 +18,18 @@ _build/
 bench/data/*.avro
 bench/results/
 
+# Benchmark build artifacts
+bench/java/target/
+bench/java/dependency-reduced-pom.xml
+bench/rust/target/
+bench/rust-fast/target/
+bench/python/venv/
+bench/python-avro/venv/
+bench/**/*.jar
+bench/**/*.class
+bench/**/Cargo.lock
+bench/**/*.backup
+
 # Test artifacts
 test/tmp/
 *.test
