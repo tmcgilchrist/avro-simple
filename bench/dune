@@ -1,0 +1,33 @@
+(executable
+ (name encode_bench)
+ (libraries avro-simple benchmark unix)
+ (modules encode_bench))
+
+(executable
+ (name decode_bench)
+ (libraries avro-simple benchmark unix)
+ (modules decode_bench))
+
+(executable
+ (name container_bench)
+ (libraries avro-simple benchmark unix)
+ (modules container_bench))
+
+(executable
+ (name compression_bench)
+ (libraries avro-simple benchmark unix)
+ (modules compression_bench))
+
+(executable
+ (name cross_language_bench)
+ (libraries avro-simple unix)
+ (modules cross_language_bench))
+
+(rule
+ (alias runbench)
+ (deps encode_bench.exe decode_bench.exe container_bench.exe compression_bench.exe)
+ (action (progn
+   (run ./encode_bench.exe)
+   (run ./decode_bench.exe)
+   (run ./container_bench.exe)
+   (run ./compression_bench.exe))))

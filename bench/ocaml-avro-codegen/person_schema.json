@@ -1,0 +1,10 @@
+{
+  "type": "record",
+  "name": "Person",
+  "fields": [
+    {"name": "name", "type": "string"},
+    {"name": "age", "type": "int"},
+    {"name": "email", "type": ["null", "string"]},
+    {"name": "phone_numbers", "type": {"type": "array", "items": "string"}}
+  ]
+}

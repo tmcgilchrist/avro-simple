@@ -36,7 +36,7 @@ jobs:
           opam-disable-sandboxing: true
 
       - name: Install dependencies
-        run: opam install . --deps-only --with-test --with-doc
+        run: opam install . --deps-only --with-test --with-doc --with-dev-setup -y
 
       - name: Build
         run: opam exec -- dune build
