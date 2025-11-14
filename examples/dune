@@ -1,0 +1,14 @@
+(executable
+ (name basic_usage)
+ (libraries avro)
+ (modules basic_usage))
+
+(executable
+ (name schema_evolution)
+ (libraries avro)
+ (modules schema_evolution))
+
+(executable
+ (name container_files)
+ (libraries avro unix)
+ (modules container_files))

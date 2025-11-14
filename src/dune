@@ -1,0 +1,22 @@
+(library
+ (name avro)
+ (public_name avro)
+ (libraries yojson bigstringaf decompress.zl zarith uuidm)
+ (modules
+  avro
+  codec
+  codec_deflate
+  codec_null
+  codec_registry
+  container_reader
+  container_writer
+  decoder
+  fingerprint
+  input
+  logical
+  output
+  resolution
+  schema
+  schema_json
+  type_name
+  value))

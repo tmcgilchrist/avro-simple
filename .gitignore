@@ -1,0 +1,23 @@
+# OCaml build artifacts
+_build/
+*.install
+*.merlin
+
+# OPAM files
+*.opam
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Benchmark data
+bench/data/*.avro
+bench/results/
+
+# Test artifacts
+test/tmp/
+*.test
