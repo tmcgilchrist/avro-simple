@@ -137,7 +137,6 @@ let read_block t =
   | End_of_file -> None
   | Sys_error _ -> None
 
-(* TODO Some of these helpers could be re-written? *)
 let iter f t =
   let rec loop () =
     match read_block t with
@@ -175,10 +174,6 @@ let iter_blocks f t =
         (loop[@tailcall]) ()
   in
   loop ()
-
-(* TODO Is this function used? We should implement it or remove it *)
-let seek_to_block _t _n =
-  failwith "seek_to_block not implemented - requires block index"
 
 let open_at_offset ~path ~codec ~offset =
   let t = open_file ~path ~codec () in

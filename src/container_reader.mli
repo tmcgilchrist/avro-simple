@@ -217,14 +217,3 @@ val iter_blocks : ('a array -> unit) -> 'a t -> unit
 *)
 
 (** {1 Advanced Operations} *)
-
-val seek_to_block : 'a t -> int -> unit
-(** [seek_to_block t n] seeks to the nth block in the file.
-
-    Note: This function is not currently implemented as it requires maintaining
-    a block index. Calling this function will raise a Failure exception.
-
-    @param t The reader
-    @param n The block number to seek to (0-indexed)
-    @raise Failure always, as this operation is not implemented
-*)

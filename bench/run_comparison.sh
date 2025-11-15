@@ -215,6 +215,24 @@ run_full_comparison() {
     print_info "Results saved to results/${op}_${cnt}_${comp}_comparison.{md,json}"
 }
 
+run_all_operations() {
+    local cnt=$1
+    local comp=$2
+
+    print_header "Running All Operations Benchmark Suite"
+    print_info "Records: $cnt"
+    print_info "Compression: $comp"
+    echo
+
+    for op in encode decode container; do
+        print_info "Running $op benchmark..."
+        run_full_comparison "$op" "$cnt" "$comp"
+        echo
+    done
+
+    print_info "All benchmarks complete! Results saved in results/"
+}
+
 show_usage() {
     cat << EOF
 Usage: $0 [OPTIONS] COMMAND
@@ -223,7 +241,8 @@ Cross-language Avro benchmark comparison using hyperfine.
 
 COMMANDS:
     build           Build all benchmark programs
-    run             Run comparison benchmark
+    run             Run single comparison benchmark
+    run-all         Run all operations (encode, decode, container)
     clean           Clean build artifacts
 
 OPTIONS:
@@ -241,6 +260,9 @@ EXAMPLES:
     # Run encoding benchmark with 10k records
     $0 run
 
+    # Run all operations (encode, decode, container) with 10k records
+    $0 run-all
+
     # Run decoding benchmark with 50k records
     $0 -o decode -c 50000 run
 
@@ -249,6 +271,13 @@ EXAMPLES:
 
     # Run with custom warmup and run counts
     $0 -w 5 -r 20 run
+
+    # Run all operations with different record counts
+    $0 -c 10000 run-all
+    $0 -c 100000 run-all
+
+    # Quick decode benchmark comparison
+    $0 -o decode -c 10000 -w 2 -r 5 run
 
 ENVIRONMENT VARIABLES:
     COUNT          Number of records (overridden by -c)
@@ -295,6 +324,10 @@ while [[ $# -gt 0 ]]; do
             COMMAND="run"
             shift
             ;;
+        run-all)
+            COMMAND="run-all"
+            shift
+            ;;
         clean)
             COMMAND="clean"
             shift
@@ -329,6 +362,9 @@ case "${COMMAND:-}" in
         print_info "Benchmark runs: $RUNS"
         echo
         run_full_comparison "$OPERATION" "$COUNT" "$COMPRESSION"
+        ;;
+    run-all)
+        run_all_operations "$COUNT" "$COMPRESSION"
         ;;
     clean)
         print_header "Cleaning Build Artifacts"

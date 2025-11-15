@@ -9,6 +9,7 @@ A pure OCaml implementation of [Apache Avro](https://avro.apache.org/docs/1.11.1
 - **Schema evolution**: Built-in support for reading data with different schemas
 - **Container files**: Full support for Avro Object Container File format
 - **Compression**: Multiple compression codecs (null, deflate, snappy, zstandard)
+- **Streaming**: Memory-efficient block-level streaming for large files
 - **Type-safe**: Codec-enforced types with composable combinators
 
 ## Quick Start
@@ -111,6 +112,86 @@ let writer = Container_writer.create ~compression:"lz4" codec "data.avro" in
 - `deflate`: Good default, widely compatible, moderate compression
 - `zstandard`: Best compression ratio, fast decompression (recommended)
 - `snappy`: Fastest compression, lower ratio (good for real-time data)
+
+## Streaming Large Files
+
+The library provides memory-efficient streaming for processing large Avro container files. Only one block is loaded into memory at a time, enabling processing of files larger than available RAM.
+
+### Lazy Sequences
+
+Use `to_seq` for flexible, composable streaming with early termination:
+
+```ocaml
+open Avro_simple
+
+(* Process only what you need *)
+let reader = Container_reader.open_file ~path:"large.avro" ~codec () in
+
+let first_100_purchases =
+  Container_reader.to_seq reader
+  |> Seq.filter (fun event -> event.event_type = "purchase")
+  |> Seq.take 100
+  |> List.of_seq
+in
+
+Container_reader.close reader
+(* Only scans until 100 purchases found - doesn't load entire file! *)
+```
+
+### Full Scan Iterator
+
+Use `iter` for maximum throughput when processing all records:
+
+```ocaml
+let count = ref 0 in
+Container_reader.iter (fun record ->
+  incr count;
+  process_record record
+) reader
+(* Memory usage: O(block_size), not O(file_size) *)
+```
+
+### Aggregation with Fold
+
+Use `fold` for accumulating results:
+
+```ocaml
+(* Count records by category *)
+let counts = Container_reader.fold (fun acc record ->
+  let count =
+    try List.assoc record.category acc
+    with Not_found -> 0
+  in
+  (record.category, count + 1) :: List.remove_assoc record.category acc
+) [] reader
+```
+
+### Streaming Pipelines
+
+Combine streaming read and write for transformations:
+
+```ocaml
+let reader = Container_reader.open_file ~path:"input.avro" ~codec () in
+let writer = Container_writer.create ~path:"output.avro" ~codec () in
+
+(* Stream: read -> filter -> transform -> write *)
+Container_reader.to_seq reader
+|> Seq.filter (fun e -> e.value > 50)
+|> Seq.map (fun e -> { e with value = e.value * 2 })
+|> Seq.iter (Container_writer.write writer);
+
+Container_reader.close reader;
+Container_writer.close writer
+(* No intermediate storage - constant memory usage! *)
+```
+
+**Memory Characteristics:**
+
+- **Streaming approach**: O(block_size) memory - typically 1-2 MB
+- **Full load approach**: O(file_size) memory - entire file in RAM
+- **Benefit**: Process 10 GB files with only ~20 MB memory usage
+
+See `examples/large_file_streaming.ml` for comprehensive examples and `docs/STREAMING_IMPLEMENTATION.md` for technical details.
 
 ## Building
 
@@ -237,14 +318,16 @@ This document compares the two OCaml Avro library implementations to help you ch
 
 ### Container Files
 
-| Feature               | avro-simple                  | ocaml-avro         |
-|-----------------------|------------------------------|--------------------|
-| **OCF Support**       | ✅ Full read/write           | ✅ Full read/write |
-| **Sync Markers**      | ✅ Supported                 | ✅ Supported       |
-| **Block Compression** | ✅ Supported                 | ✅ Supported       |
-| **Metadata**          | ✅ Read/write                | ✅ Read/write      |
-| **Streaming**         | ✅ Iterator/fold/sequence    | ✅ Iterator        |
-| **Writer Schema**     | ✅ Auto-parsed from metadata | ✅ Supported       |
+| Feature               | avro-simple                              | ocaml-avro                        |
+|-----------------------|------------------------------------------|-----------------------------------|
+| **OCF Support**       | ✅ Full read/write                       | ✅ Full read/write                |
+| **Sync Markers**      | ✅ Supported                             | ✅ Supported                      |
+| **Block Compression** | ✅ Supported                             | ✅ Supported                      |
+| **Metadata**          | ✅ Read/write                            | ✅ Read/write                     |
+| **Streaming**         | ✅ Block-level (O(block_size) memory)    | ⚠️ String-based (O(file_size))    |
+| **Lazy Sequences**    | ✅ to_seq, iter, fold, iter_blocks       | ✅ Iterator                       |
+| **Large Files**       | ✅ Files larger than RAM                 | ❌ Must fit in memory             |
+| **Writer Schema**     | ✅ Auto-parsed from metadata             | ✅ Supported                      |
 
 ### Compression Codecs
 
@@ -263,6 +346,8 @@ This document compares the two OCaml Avro library implementations to help you ch
 
 * **Dynamic schema handling** - Working with schemas determined at runtime
 * **Schema evolution** - Reading data written with different schema versions
+* **Large file processing** - Stream files larger than available RAM
+* **Memory efficiency** - Process multi-GB files with constant memory usage
 * **No build complexity** - Simple library dependency, no code generation step
 * **Flexible data processing** - Building ETL pipelines, data transformations
 * **Modern compression** - Snappy or Zstandard for better performance
@@ -271,9 +356,11 @@ This document compares the two OCaml Avro library implementations to help you ch
 
 **Example scenarios:**
 - Data migration tools that handle multiple schema versions
-- Log processing systems with evolving schemas
+- Log processing systems with evolving schemas and large volumes
+- Big data pipelines processing multi-GB Avro files
 - Microservices with schema registry integration
 - Interactive data exploration tools
+- Streaming ETL jobs with constant memory requirements
 
 ### Choose ocaml-avro when you need:
 

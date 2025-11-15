@@ -11,9 +11,17 @@ Cross-language benchmarks comparing OCaml Avro implementation with official impl
 # Run encoding benchmark (10,000 records)
 ./run_comparison.sh run
 
+# Run decoding benchmark
+./run_comparison.sh -o decode run
+
+# Run all operations (encode, decode, container)
+./run_comparison.sh run-all
+
 # Run with custom parameters
 ./run_comparison.sh -o decode -c 50000 -r 10 run
 ```
+
+**For detailed decode benchmark examples, see [DECODE_BENCHMARKS.md](DECODE_BENCHMARKS.md)**
 
 ---
 
@@ -25,6 +33,7 @@ Cross-language benchmarks comparing OCaml Avro implementation with official impl
 - [Performance Results](#performance-results)
 - [Implementation Notes](#implementation-notes)
 - [Contributing Improvements](#contributing-improvements)
+- **[Decode Benchmark Guide](DECODE_BENCHMARKS.md)** - Comprehensive decode benchmark examples
 
 ---
 
@@ -158,7 +167,8 @@ pip install -r requirements.txt
 ### Commands
 
 - `build` - Build all benchmark programs
-- `run` - Run comparison benchmark
+- `run` - Run single comparison benchmark
+- `run-all` - Run all operations (encode, decode, container)
 - `clean` - Clean build artifacts
 
 ### Options
@@ -168,6 +178,26 @@ pip install -r requirements.txt
 - `-w, --warmup WARMUP` - Number of warmup runs (default: 3)
 - `-r, --runs RUNS` - Number of benchmark runs (default: 10)
 - `-z, --compression CODEC` - Compression codec: `null` or `deflate` (default: null)
+
+### Benchmark Operations
+
+The script supports three types of benchmarks:
+
+1. **`encode`** - Measures serialization performance
+   - Creates Person records with varying data
+   - Encodes to binary Avro format
+   - Reports throughput in MB/s
+
+2. **`decode`** - Measures deserialization performance
+   - Pre-encodes Person records
+   - Decodes from binary Avro format
+   - Reports throughput in MB/s
+   - **See [DECODE_BENCHMARKS.md](DECODE_BENCHMARKS.md) for detailed examples**
+
+3. **`container`** - Measures container file I/O performance
+   - Writes records to Avro container file with compression
+   - Reads all records back
+   - Reports write/read times and file size
 - `-h, --help` - Show help message
 
 ### Examples
@@ -179,11 +209,19 @@ pip install -r requirements.txt
 # Decoding benchmark with 100k records
 ./run_comparison.sh -o decode -c 100000 run
 
+# Run all operations (encode, decode, container) at once
+./run_comparison.sh run-all
+
 # Container file benchmark with deflate compression
 ./run_comparison.sh -o container -z deflate run
 
-# Quick test with fewer runs
-./run_comparison.sh -c 1000 -r 3 run
+# Quick decode test with fewer runs
+./run_comparison.sh -o decode -c 1000 -w 2 -r 3 run
+
+# Comprehensive benchmark suite with multiple sizes
+./run_comparison.sh -c 1000 run-all
+./run_comparison.sh -c 10000 run-all
+./run_comparison.sh -c 100000 run-all
 
 # Clean and rebuild
 ./run_comparison.sh clean

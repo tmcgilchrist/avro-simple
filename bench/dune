@@ -23,6 +23,11 @@
  (libraries avro-simple unix)
  (modules cross_language_bench))
 
+(executable
+ (name streaming_benchmark)
+ (libraries avro-simple unix)
+ (modules streaming_benchmark))
+
 (rule
  (alias runbench)
  (deps encode_bench.exe decode_bench.exe container_bench.exe compression_bench.exe)

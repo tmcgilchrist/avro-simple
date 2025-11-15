@@ -12,3 +12,8 @@
  (name container_files)
  (libraries avro-simple unix)
  (modules container_files))
+
+(executable
+ (name large_file_streaming)
+ (libraries avro-simple unix)
+ (modules large_file_streaming))
