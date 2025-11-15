@@ -107,8 +107,12 @@ let write t value =
 
 let write_block t values =
   flush_block t; (* Flush any pending data first *)
-  (* Buffer is maintained in reverse order, so reverse the array *)
-  t.buffer <- Array.to_list values |> List.rev;
+  (* Buffer is maintained in reverse order, so build list by prepending from end *)
+  let acc = ref [] in
+  for i = 0 to Array.length values - 1 do
+    acc := values.(i) :: !acc
+  done;
+  t.buffer <- !acc;
   flush_block t
 
 let flush t =

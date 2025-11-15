@@ -21,5 +21,6 @@ let init_codecs () =
   Codec_null.register ();
   Codec_deflate.register ()
 
+(* TODO We call this function directly in some places, is that necessary now with this module level let binding? *)
 (* Auto-initialize on module load *)
 let () = init_codecs ()

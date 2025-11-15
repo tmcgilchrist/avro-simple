@@ -49,7 +49,9 @@ let rec of_default = function
   | Schema.String_default s -> String s
   | Schema.Enum_default s ->
       Enum (0, s)
-  | Schema.Array_default items -> Array (Array.of_list (List.map of_default items))
+  | Schema.Array_default items ->
+      let arr = Array.init (List.length items) (fun i -> of_default (List.nth items i)) in
+      Array arr
   | Schema.Map_default pairs -> Map (List.map (fun (k, v) -> (k, of_default v)) pairs)
   | Schema.Union_default (branch, value) -> Union (branch, of_default value)
 

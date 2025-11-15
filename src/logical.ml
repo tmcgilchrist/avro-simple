@@ -212,7 +212,7 @@ let local_timestamp_micros = {
 let z_to_bytes z =
   (* Convert Z.t to two's complement big-endian bytes *)
   if Z.equal z Z.zero then
-    Bytes.of_string "\000"
+    Bytes.make 1 '\000'
   else if Z.gt z Z.zero then
     (* Positive number *)
     let rec to_bytes_list n acc =

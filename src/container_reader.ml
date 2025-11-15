@@ -14,9 +14,11 @@ let read_exact channel n =
   really_input channel bytes 0 n;
   bytes
 
+let expected_magic = Bytes.of_string "Obj\x01"
+
 let read_header channel =
   let magic = read_exact channel 4 in
-  if Bytes.to_string magic <> "Obj\x01" then
+  if magic <> expected_magic then
     failwith "Invalid Avro container file: bad magic bytes";
 
   let metadata_buffer = Bytes.create 8192 in
@@ -128,9 +130,9 @@ let read_block t =
     let decompressed = t.decompress compressed in
 
     let inp = Input.of_bytes decompressed in
-    let objects = List.init count (fun _ -> t.decoder inp) in
+    let objects = Array.init count (fun _ -> t.decoder inp) in
 
-    Some (Array.of_list objects)
+    Some objects
   with
   | End_of_file -> None
   | Sys_error _ -> None
@@ -142,7 +144,7 @@ let iter f t =
     | None -> ()
     | Some objects ->
         Array.iter f objects;
-        loop ()
+        (loop[@tailcall]) ()
   in
   loop ()
 
@@ -152,7 +154,7 @@ let fold f acc t =
     | None -> acc
     | Some objects ->
         let acc' = Array.fold_left f acc objects in
-        loop acc'
+        (loop[@tailcall]) acc'
   in
   loop acc
 
@@ -170,7 +172,7 @@ let iter_blocks f t =
     | None -> ()
     | Some objects ->
         f objects;
-        loop ()
+        (loop[@tailcall]) ()
   in
   loop ()
 

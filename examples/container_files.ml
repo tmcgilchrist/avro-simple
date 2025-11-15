@@ -20,6 +20,9 @@ let () =
 
   Printf.printf "=== Avro Container Files Example ===\n\n";
 
+  (* Get platform-independent temporary directory *)
+  let temp_dir = Filename.get_temp_dir_name () in
+
   (* Define a codec for our data *)
   let event_codec =
     Avro_simple.Codec.record (Avro_simple.Type_name.simple "Event")
@@ -32,7 +35,8 @@ let () =
   (* Example 1: Writing a container file with null compression *)
   Printf.printf "1. Writing container file (null compression):\n";
 
-  let filename_null = "/tmp/events_null.avro" in
+  (* Use platform-independent temporary directory *)
+  let filename_null = Filename.concat temp_dir "events_null.avro" in
   let writer = Avro_simple.Container_writer.create
     ~path:filename_null
     ~codec:event_codec
@@ -76,7 +80,7 @@ let () =
   (* Example 3: Writing with deflate compression *)
   Printf.printf "\n3. Writing with deflate compression:\n";
 
-  let filename_deflate = "/tmp/events_deflate.avro" in
+  let filename_deflate = Filename.concat temp_dir "events_deflate.avro" in
   let writer_deflate = Avro_simple.Container_writer.create
     ~path:filename_deflate
     ~codec:event_codec
@@ -127,7 +131,7 @@ let () =
   (* Example 5: Writing blocks explicitly for better control *)
   Printf.printf "\n5. Writing data in blocks:\n";
 
-  let filename_blocks = "/tmp/events_blocks.avro" in
+  let filename_blocks = Filename.concat temp_dir "events_blocks.avro" in
   let writer_blocks = Avro_simple.Container_writer.create
     ~path:filename_blocks
     ~codec:event_codec
@@ -196,7 +200,7 @@ let () =
   (* Example 9: Custom metadata *)
   Printf.printf "\n9. Writing with custom metadata:\n";
 
-  let filename_metadata = "/tmp/events_metadata.avro" in
+  let filename_metadata = Filename.concat temp_dir "events_metadata.avro" in
   let writer_metadata = Avro_simple.Container_writer.create
     ~path:filename_metadata
     ~codec:event_codec

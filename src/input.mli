@@ -5,18 +5,15 @@
     functions to read various Avro primitive types. *)
 
 (** The input decoder type, containing the binary data and current position. *)
-type t = {
-  data: string;
-  mutable pos: int;
-}
+type t
 
-(** [of_string data] creates a new input decoder from a string.
+(** [of_bytes data] creates a new input decoder from a bytes sequence.
     The position is initialized to 0. *)
-val of_string : string -> t
-
-(** [of_bytes bytes] creates a new input decoder from a bytes sequence.
-    The bytes are converted to a string and the position is initialized to 0. *)
 val of_bytes : bytes -> t
+
+(** [of_string str] creates a new input decoder from a string.
+    The string is converted to bytes and the position is initialized to 0. *)
+val of_string : string -> t
 
 (** [position t] returns the current position in the input buffer. *)
 val position : t -> int

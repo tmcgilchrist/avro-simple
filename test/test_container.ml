@@ -6,8 +6,7 @@ open Avro_simple
 let () = Avro.init_codecs ()
 
 (* TODO Create API that takes bytes or bigstring *)
-(* TODO Make this relative to the test directory not an absolute path. *)
-let test_file = "/tmp/test_avro_container.avro"
+let test_file = Filename.concat (Filename.get_temp_dir_name ()) "test_avro_container.avro"
 
 (** Test writing and reading integers *)
 let test_int_roundtrip () =

@@ -254,15 +254,18 @@ let rec deconflict env reader writer =
                   | Some idx -> Ok idx
                   | None -> Error (Missing_symbol writer_sym))
             in
-            let rec map_all symbols acc =
+            let rec map_all symbols acc count =
               match symbols with
-              | [] -> Ok (Array.of_list (List.rev acc))
+              | [] ->
+                  let result = Array.make count 0 in
+                  List.iteri (fun i idx -> result.(count - 1 - i) <- idx) acc;
+                  Ok result
               | sym :: rest ->
                   (match map_symbol sym with
-                  | Ok idx -> map_all rest (idx :: acc)
+                  | Ok idx -> map_all rest (idx :: acc) (count + 1)
                   | Error e -> Error e)
             in
-            (match map_all writer_symbols [] with
+            (match map_all writer_symbols [] 0 with
             | Ok symbol_map ->
                 Ok (Enum { name = reader_name; symbols = reader_symbols; symbol_map })
             | Error e -> Error e)
@@ -272,17 +275,20 @@ let rec deconflict env reader writer =
   | Schema.Union reader_branches ->
       (match writer with
       | Schema.Union writer_branches ->
-          let rec resolve_branches branches acc =
+          let rec resolve_branches branches acc count =
             match branches with
-            | [] -> Ok (Array.of_list (List.rev acc))
+            | [] ->
+                let result = Array.make count (0, Null) in
+                List.iteri (fun i item -> result.(count - 1 - i) <- item) acc;
+                Ok result
             | writer_branch :: rest ->
                 (match find_union_branch reader_branches writer_branch with
                 | Some (reader_idx, resolved) ->
-                    resolve_branches rest ((reader_idx, resolved) :: acc)
+                    resolve_branches rest ((reader_idx, resolved) :: acc) (count + 1)
                 | None ->
                     Error (Missing_union_branch (Type_name.simple "union")))
           in
-          (match resolve_branches writer_branches [] with
+          (match resolve_branches writer_branches [] 0 with
           | Ok resolved_array -> Ok (Union resolved_array)
           | Error e -> Error e)
 

@@ -4,9 +4,16 @@ let name = "deflate"
 
 let create ?(level=6) () = { level }
 
+(* Helper to convert bytes to bigstring using efficient blit operation *)
+let bigstring_of_bytes len data =
+  let bigstr = Bigstringaf.create len in
+  Bigstringaf.blit_from_bytes data ~src_off:0 bigstr ~dst_off:0 ~len;
+  bigstr
+
 let compress t data =
-  let input = Bigstringaf.of_string ~off:0 ~len:(Bytes.length data) (Bytes.to_string data) in
-  let output_buffer = Buffer.create (Bytes.length data) in
+  let len = Bytes.length data in
+  let input = bigstring_of_bytes len data in
+  let output_buffer = Buffer.create len in
 
   let w = De.Lz77.make_window ~bits:15 in
   let q = De.Queue.create 0x1000 in
@@ -39,8 +46,9 @@ let compress t data =
   Bytes.of_string compressed_str
 
 let decompress _t data =
-  let input = Bigstringaf.of_string ~off:0 ~len:(Bytes.length data) (Bytes.to_string data) in
-  let output_buffer = Buffer.create (Bytes.length data * 2) in
+  let len = Bytes.length data in
+  let input = bigstring_of_bytes len data in
+  let output_buffer = Buffer.create (len * 2) in
 
   let o = De.bigstring_create De.io_buffer_size in
   let allocate bits = De.make_window ~bits in

@@ -53,6 +53,7 @@ let string = {
 }
 
 (* TODO Warning on un-used variable *)
+(* TODO In general reduce type conversions between List, Array, Bytes, String. *)
 let fixed ?(name = "fixed") size = {
   schema = Schema.Fixed {
     fixed_name = Type_name.simple name;
@@ -83,21 +84,24 @@ let array codec = {
     end
   );
   decode = (fun inp ->
+    (* Accumulate arrays from blocks, then concatenate at end *)
     let rec read_blocks acc =
       let count = Input.read_long inp in
       if count = 0L then
         List.rev acc
       else if count < 0L then
         let _size = Input.read_long inp in
-        let items = List.init (Int64.to_int (Int64.neg count))
+        let items = Array.init (Int64.to_int (Int64.neg count))
           (fun _ -> codec.decode inp) in
-        read_blocks (List.rev_append items acc)
+        (read_blocks[@tailcall]) (items :: acc)
       else
-        let items = List.init (Int64.to_int count)
+        let items = Array.init (Int64.to_int count)
           (fun _ -> codec.decode inp) in
-        read_blocks (List.rev_append items acc)
+        (read_blocks[@tailcall]) (items :: acc)
     in
-    Array.of_list (read_blocks [])
+    let arrays = read_blocks [] in
+    (* Concatenate all arrays efficiently *)
+    Array.concat arrays
   );
 }
 

@@ -9,7 +9,7 @@ let of_buffer buffer = { buffer }
 
 let contents t = Buffer.contents t.buffer
 
-let to_bytes t = Bytes.of_string (contents t)
+let to_bytes t = Buffer.to_bytes t.buffer
 
 let zigzag32 n =
   let n32 = Int32.of_int n in
@@ -26,7 +26,7 @@ let write_long t n =
       Buffer.add_char t.buffer (Char.chr byte)
     else begin
       Buffer.add_char t.buffer (Char.chr (byte lor 0x80));
-      loop n'
+      (loop[@tailcall]) n'
     end
   in
   loop (zigzag64 n)

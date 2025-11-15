@@ -116,7 +116,8 @@ fn benchmark_container(count: i32, compression: &str) {
         _ => Codec::Null,
     };
 
-    let temp_path = format!("/tmp/bench_{}.avro", compression);
+    let temp_dir = std::env::temp_dir();
+    let temp_path = temp_dir.join(format!("bench_{}.avro", compression));
 
     // Write
     let start_write = Instant::now();

@@ -284,7 +284,7 @@ let test_tree_deep () =
 (** Test with container files *)
 let test_linked_list_container () =
   let codec = linked_list_codec () in
-  let test_file = "/tmp/test_recursive_list.avro" in
+  let test_file = Filename.concat (Filename.get_temp_dir_name ()) "test_recursive_list.avro" in
 
   (* Write linked list to container file *)
   let writer = Container_writer.create ~path:test_file ~codec () in

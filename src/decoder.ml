@@ -52,16 +52,15 @@ let rec decode_value read_schema input =
         if count = 0L then
           List.rev acc
         else if count < 0L then
-          let _size = Input.read_long input in
-          let items = List.init (Int64.to_int (Int64.neg count))
+          let items = Array.init (Int64.to_int (Int64.neg count))
             (fun _ -> decode_value elem_schema input) in
-          read_blocks (List.rev_append items acc)
+          (read_blocks[@tailcall]) (items :: acc)
         else
-          let items = List.init (Int64.to_int count)
+          let items = Array.init (Int64.to_int count)
             (fun _ -> decode_value elem_schema input) in
-          read_blocks (List.rev_append items acc)
+          (read_blocks[@tailcall]) (items :: acc)
       in
-      Value.Array (Array.of_list (read_blocks []))
+      Value.Array (Array.concat (read_blocks []))
 
   | Resolution.Map elem_schema ->
       let rec read_blocks acc =
@@ -69,14 +68,13 @@ let rec decode_value read_schema input =
         if count = 0L then
           List.rev acc
         else if count < 0L then
-          let _size = Input.read_long input in
           let items = List.init (Int64.to_int (Int64.neg count))
             (fun _ ->
               let key = Input.read_string input in
               let value = decode_value elem_schema input in
               (key, value)
             ) in
-          read_blocks (List.rev_append items acc)
+          (read_blocks[@tailcall]) (List.rev_append items acc)
         else
           let items = List.init (Int64.to_int count)
             (fun _ ->
@@ -84,7 +82,7 @@ let rec decode_value read_schema input =
               let value = decode_value elem_schema input in
               (key, value)
             ) in
-          read_blocks (List.rev_append items acc)
+          (read_blocks[@tailcall]) (List.rev_append items acc)
       in
       Value.Map (read_blocks [])
 
@@ -100,10 +98,18 @@ let rec decode_value read_schema input =
         | None -> None
       ) decoded_fields in
 
-      let with_defaults = List.fold_left (fun acc (_reader_pos, field_name, default) ->
-        let default_value = Value.of_default default in
-        acc @ [(field_name, default_value)]
-      ) reader_fields defaults in
+      (* Append defaults at the end, efficiently using tail-recursive reverse and append *)
+      let with_defaults =
+        match defaults with
+        | [] -> reader_fields
+        | _ ->
+            let default_values = List.map (fun (_reader_pos, field_name, default) ->
+              let default_value = Value.of_default default in
+              (field_name, default_value)
+            ) defaults in
+            (* Since defaults is typically small, this @ is acceptable *)
+            reader_fields @ default_values
+      in
 
       Value.Record with_defaults
 
