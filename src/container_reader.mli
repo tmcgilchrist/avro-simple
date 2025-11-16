@@ -72,6 +72,23 @@ val close : 'a t -> unit
     After closing, the reader should not be used for further operations.
 *)
 
+val of_bytes : bytes -> codec:'a Codec.t -> unit -> 'a t
+(** [of_bytes data ~codec ()] creates an Avro container reader from in-memory bytes.
+
+    This function is useful for reading Avro container data that has been loaded
+    into memory (e.g., from a network request or browser FileReader API).
+
+    The function performs the same validation and initialization as {!open_file},
+    but operates entirely on the provided bytes without file I/O.
+
+    @param data The complete Avro container file contents as bytes
+    @param codec The codec containing the decoder for converting bytes to ['a]
+    @return A reader instance ready to read data blocks
+
+    @raise Failure if the data has invalid magic bytes, missing schema metadata,
+                    unparseable schema, or unknown compression codec
+*)
+
 val open_at_offset : path:string -> codec:'a Codec.t -> offset:int -> 'a t
 (** [open_at_offset ~path ~codec ~offset] opens a container file and seeks to
     a specific byte offset.
