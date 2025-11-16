@@ -5,9 +5,9 @@ description:
   "A fast, feature-rich, pure OCaml implementation of Apache Avro with codec-based design, schema evolution support, and container file format."
 maintainer: ["timmcgil@gmail.com"]
 authors: ["Tim McGilchrist"]
-license: "BSD3"
-homepage: "https://github.com/tmcgilchrist/ocaml-avro"
-bug-reports: "https://github.com/tmcgilchrist/ocaml-avro/issues"
+license: "BSD-3-clause"
+homepage: "https://github.com/tmcgilchrist/avro-simple"
+bug-reports: "https://github.com/tmcgilchrist/avro-simple/issues"
 depends: [
   "ocaml" {>= "5.0"}
   "dune" {>= "3.19" & >= "3.0"}
@@ -40,5 +40,5 @@ build: [
     "@doc" {with-doc}
   ]
 ]
-dev-repo: "git+https://github.com/tmcgilchrist/ocaml-avro.git"
+dev-repo: "git+https://github.com/tmcgilchrist/avro-simple.git"
 x-maintenance-intent: ["(latest)"]

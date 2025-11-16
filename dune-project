@@ -1,7 +1,7 @@
 (lang dune 3.19)
 (name avro-simple)
-(source (github tmcgilchrist/ocaml-avro))
-(license BSD3)
+(source (github tmcgilchrist/avro-simple))
+(license BSD-3-clause)
 (authors "Tim McGilchrist")
 (maintainers "timmcgil@gmail.com")
 
