@@ -21,6 +21,7 @@
   (zarith (>= 1.14))
   (alcotest (and :with-test (>= 1.7.0)))
   (qcheck (and :with-test (>= 0.20)))
+  (qcheck-alcotest (and :with-test (>= 0.20)))
   (avro :with-dev-setup)
   (benchmark :with-dev-setup))
  (depopts

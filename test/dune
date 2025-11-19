@@ -5,7 +5,7 @@
 
 (test
  (name test_qcheck_properties)
- (libraries avro-simple qcheck)
+ (libraries avro-simple alcotest qcheck qcheck-alcotest)
  (modules test_qcheck_properties))
 
 (test
