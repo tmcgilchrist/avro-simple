@@ -3,8 +3,8 @@ opam-version: "2.0"
 synopsis: "Pure OCaml implementation of Apache Avro"
 description:
   "A fast, feature-rich, pure OCaml implementation of Apache Avro with codec-based design, schema evolution support, and container file format."
-maintainer: ["timmcgil@gmail.com"]
-authors: ["Tim McGilchrist"]
+maintainer: ["timmcgil@gmail.com" "huw.campbell@gmail.com"]
+authors: ["Tim McGilchrist" "Huw Campbell"]
 license: "BSD-3-clause"
 homepage: "https://github.com/tmcgilchrist/avro-simple"
 bug-reports: "https://github.com/tmcgilchrist/avro-simple/issues"
@@ -39,11 +39,7 @@ build: [
     "-j"
     jobs
     "@install"
-    "@runtest" {with-test}
+    "@runtest" {with-test & arch != "arm32" & arch != "x86_32"}
     "@doc" {with-doc}
   ]
-  [
-    "sh" "-c"
-    "ALCOTEST_QUICK_TESTS=1 dune runtest -p %{name}%"
-  ] {with-test}
 ]

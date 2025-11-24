@@ -2,8 +2,8 @@
 (name avro-simple)
 (source (github tmcgilchrist/avro-simple))
 (license BSD-3-clause)
-(authors "Tim McGilchrist")
-(maintainers "timmcgil@gmail.com")
+(authors "Tim McGilchrist" "Huw Campbell")
+(maintainers "timmcgil@gmail.com" "huw.campbell@gmail.com")
 
 (generate_opam_files true)
 
