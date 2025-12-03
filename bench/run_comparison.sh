@@ -222,15 +222,27 @@ run_all_operations() {
     print_header "Running All Operations Benchmark Suite"
     print_info "Records: $cnt"
     print_info "Compression: $comp"
+    print_info "This will benchmark: ENCODE, DECODE, and CONTAINER operations"
     echo
 
+    # Track timing
+    local start_time=$(date +%s)
+
     for op in encode decode container; do
-        print_info "Running $op benchmark..."
+        print_header "Benchmarking: $op operation"
         run_full_comparison "$op" "$cnt" "$comp"
         echo
     done
 
-    print_info "All benchmarks complete! Results saved in results/"
+    local end_time=$(date +%s)
+    local duration=$((end_time - start_time))
+
+    print_header "Benchmark Suite Complete!"
+    print_info "Total time: ${duration}s"
+    print_info "Results saved in results/"
+    echo
+    print_info "Generated files:"
+    ls -lh results/*_${cnt}_${comp}_comparison.{md,json} 2>/dev/null || true
 }
 
 show_usage() {
@@ -241,7 +253,7 @@ Cross-language Avro benchmark comparison using hyperfine.
 
 COMMANDS:
     build           Build all benchmark programs
-    run             Run single comparison benchmark
+    run             Run single comparison benchmark (encode, decode, or container)
     run-all         Run all operations (encode, decode, container)
     clean           Clean build artifacts
 

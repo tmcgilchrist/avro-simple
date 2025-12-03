@@ -288,3 +288,31 @@ let encode_to_string (codec : 'a t) (value : 'a) : string =
 let decode_from_string (codec : 'a t) (str : string) : 'a =
   let inp = Input.of_string str in
   codec.decode inp
+
+let recursive (f : 'a t -> 'a t) : 'a t =
+  (* Create mutable references for the codec components *)
+  let schema_ref = ref Schema.Null in
+  let encode_ref = ref (fun _ _ -> ()) in
+  let decode_ref = ref (fun _ -> failwith "recursive codec not initialized") in
+
+  (* Create a placeholder codec that dereferences at call time *)
+  let self = {
+    schema = Schema.Null;  (* Will be updated after construction *)
+    encode = (fun v out -> !encode_ref v out);
+    decode = (fun inp -> !decode_ref inp);
+  } in
+
+  (* Build the actual codec using the placeholder *)
+  let actual = f self in
+
+  (* Backpatch the references *)
+  schema_ref := actual.schema;
+  encode_ref := actual.encode;
+  decode_ref := actual.decode;
+
+  (* Return a codec with the correct schema but thunked encode/decode *)
+  {
+    schema = actual.schema;
+    encode = actual.encode;
+    decode = actual.decode;
+  }
