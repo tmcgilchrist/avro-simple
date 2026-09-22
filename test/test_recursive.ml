@@ -18,8 +18,19 @@ type tree_node = {
   right: tree_node option;
 }
 
-(** Build a recursive linked list codec using fixpoint *)
+(** Build a recursive linked list codec using the new recursive combinator *)
 let linked_list_codec () =
+  Codec.option (
+    Codec.recursive (fun self ->
+      Codec.record (Type_name.simple "LinkedNode") (fun value next -> { value; next })
+      |> Codec.field "value" Codec.int (fun r -> r.value)
+      |> Codec.field "next" (Codec.option self) (fun r -> r.next)
+      |> Codec.finish
+    )
+  )
+
+(** Build a recursive linked list codec using manual fixpoint (old approach) *)
+let linked_list_codec_manual () =
   (* Forward references for the option codec *)
   let option_schema_ref = ref (Schema.Union [Schema.Null; Schema.Null]) in
   let option_encode_ref = ref (fun _ _ -> ()) in
@@ -47,8 +58,21 @@ let linked_list_codec () =
 
   full_codec
 
-(** Build a recursive tree codec using fixpoint *)
+(** Build a recursive tree codec using the new recursive combinator *)
 let tree_codec () =
+  Codec.option (
+    Codec.recursive (fun self ->
+      Codec.record (Type_name.simple "TreeNode")
+        (fun tree_value left right -> { tree_value; left; right })
+      |> Codec.field "value" Codec.int (fun r -> r.tree_value)
+      |> Codec.field "left" (Codec.option self) (fun r -> r.left)
+      |> Codec.field "right" (Codec.option self) (fun r -> r.right)
+      |> Codec.finish
+    )
+  )
+
+(** Build a recursive tree codec using manual fixpoint (old approach) *)
+let tree_codec_manual () =
   (* Forward references for the option codec *)
   let option_schema_ref = ref (Schema.Union [Schema.Null; Schema.Null]) in
   let option_encode_ref = ref (fun _ _ -> ()) in
@@ -281,6 +305,97 @@ let test_tree_deep () =
    Our current fixpoint approach works correctly for encoding/decoding but the schema
    representation needs improvement to properly reference types by name. *)
 
+(** Test that manual fixpoint codec produces same results as recursive combinator *)
+let test_linked_list_manual_vs_combinator () =
+  let codec_combinator = linked_list_codec () in
+  let codec_manual = linked_list_codec_manual () in
+
+  (* Test with various list lengths *)
+  let test_length n =
+    let rec make_list i =
+      if i > n then None
+      else Some { value = i; next = make_list (i + 1) }
+    in
+
+    let original = make_list 1 in
+
+    (* Encode with combinator *)
+    let out1 = Output.create () in
+    codec_combinator.Codec.encode original out1;
+    let bytes1 = Output.to_bytes out1 in
+
+    (* Encode with manual *)
+    let out2 = Output.create () in
+    codec_manual.Codec.encode original out2;
+    let bytes2 = Output.to_bytes out2 in
+
+    (* Both should produce identical bytes *)
+    Alcotest.(check bytes)
+      (Printf.sprintf "identical encoding for length %d" n)
+      bytes1 bytes2;
+
+    (* Decode from combinator codec should work with manual codec bytes *)
+    let inp = Input.of_bytes bytes2 in
+    let decoded = codec_combinator.Codec.decode inp in
+
+    let rec to_list = function
+      | None -> []
+      | Some { value; next } -> value :: to_list next
+    in
+
+    Alcotest.(check (list int))
+      (Printf.sprintf "cross-decode length %d" n)
+      (to_list original)
+      (to_list decoded)
+  in
+
+  test_length 0;
+  test_length 1;
+  test_length 5;
+  test_length 10
+
+(** Test that manual fixpoint tree codec produces same results as recursive combinator *)
+let test_tree_manual_vs_combinator () =
+  let codec_combinator = tree_codec () in
+  let codec_manual = tree_codec_manual () in
+
+  (* Create balanced tree:
+         1
+        / \
+       2   3
+  *)
+  let tree = Some {
+    tree_value = 1;
+    left = Some { tree_value = 2; left = None; right = None };
+    right = Some { tree_value = 3; left = None; right = None };
+  } in
+
+  (* Encode with combinator *)
+  let out1 = Output.create () in
+  codec_combinator.Codec.encode tree out1;
+  let bytes1 = Output.to_bytes out1 in
+
+  (* Encode with manual *)
+  let out2 = Output.create () in
+  codec_manual.Codec.encode tree out2;
+  let bytes2 = Output.to_bytes out2 in
+
+  (* Both should produce identical bytes *)
+  Alcotest.(check bytes) "identical tree encoding" bytes1 bytes2;
+
+  (* Decode from combinator codec should work with manual codec bytes *)
+  let inp = Input.of_bytes bytes2 in
+  let decoded = codec_combinator.Codec.decode inp in
+
+  match decoded with
+  | Some { tree_value = v1;
+           left = Some { tree_value = v2; left = None; right = None };
+           right = Some { tree_value = v3; left = None; right = None } } ->
+      Alcotest.(check int) "root" 1 v1;
+      Alcotest.(check int) "left" 2 v2;
+      Alcotest.(check int) "right" 3 v3
+  | _ -> Alcotest.fail "Expected balanced tree from cross-decode"
+
 (** Test with container files *)
 let test_linked_list_container () =
   let codec = linked_list_codec () in
@@ -328,8 +443,7 @@ let () =
       test_case "single node" `Quick test_linked_list_single;
       test_case "multiple nodes" `Quick test_linked_list_multiple;
       test_case "roundtrip various lengths" `Quick test_linked_list_roundtrip;
-      (* Schema generation test disabled - recursive schemas need name references *)
-      (* test_case "schema generation" `Quick test_linked_list_schema; *)
+      test_case "manual vs combinator" `Quick test_linked_list_manual_vs_combinator;
       test_case "container file" `Quick test_linked_list_container;
     ];
     "binary tree", [
@@ -337,7 +451,6 @@ let () =
       test_case "single node" `Quick test_tree_single;
       test_case "balanced tree" `Quick test_tree_balanced;
       test_case "deep tree" `Quick test_tree_deep;
-      (* Schema generation test disabled - recursive schemas need name references *)
-      (* test_case "schema generation" `Quick test_tree_schema; *)
+      test_case "manual vs combinator" `Quick test_tree_manual_vs_combinator;
     ];
   ]

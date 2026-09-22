@@ -435,3 +435,53 @@ val encode_to_string : 'a t -> 'a -> string
     Raises [Failure] if the string cannot be decoded according to the schema.
 *)
 val decode_from_string : 'a t -> string -> 'a
+
+(** {1 Recursive Types} *)
+
+(** Create a codec for recursive types using a fixpoint combinator.
+
+    This combinator allows you to define codecs for self-referential types
+    (like linked lists or trees) without manually managing mutable references.
+
+    The function you provide receives a "self" codec that can be used to
+    refer to the type being defined. This self-reference is safe because
+    it uses internal thunking to delay evaluation until encoding/decoding time.
+
+    {2 Linked List Example}
+
+    {[
+      type linked_node = { value: int; next: linked_node option }
+
+      let linked_node_codec =
+        recursive (fun self ->
+          record (Type_name.simple "LinkedNode") (fun value next -> { value; next })
+          |> field "value" int (fun r -> r.value)
+          |> field "next" (option self) (fun r -> r.next)
+          |> finish
+        )
+    ]}
+
+    {2 Binary Tree Example}
+
+    {[
+      type tree_node = { tree_value: int; left: tree_node option; right: tree_node option }
+
+      let tree_node_codec =
+        recursive (fun self ->
+          record (Type_name.simple "TreeNode")
+            (fun tree_value left right -> { tree_value; left; right })
+          |> field "value" int (fun r -> r.tree_value)
+          |> field "left" (option self) (fun r -> r.left)
+          |> field "right" (option self) (fun r -> r.right)
+          |> finish
+        )
+    ]}
+
+    @param f A function that takes a "self" codec and returns the complete codec definition
+    @return A codec that properly handles recursive encoding and decoding
+
+    Note: The schema generated will inline the full record definition. For proper
+    Avro recursive schemas with name references, additional schema normalization
+    may be needed.
+*)
+val recursive : ('a t -> 'a t) -> 'a t
