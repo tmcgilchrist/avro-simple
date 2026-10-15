@@ -1,4 +1,4 @@
 (executable
  (name bench)
- (libraries avro unix zip)
+ (libraries avro unix camlzip)
  (modules person_schema bench))

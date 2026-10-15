@@ -23,6 +23,7 @@
   (qcheck (and :with-test (>= 0.20)))
   (qcheck-alcotest (and :with-test (>= 0.20)))
   (avro :with-dev-setup)
+  (camlzip :with-dev-setup)
   (benchmark :with-dev-setup))
  (depopts
   (snappy (>= 0.1.0))
